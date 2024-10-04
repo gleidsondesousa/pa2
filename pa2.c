@@ -6,9 +6,9 @@
 #include <time.h>
 
 // Number of random samples to take
-#define SAMPLES 10
+#define SAMPLES 10000
 // Number of times to run the experiment
-#define RUNS 10
+#define RUNS 50000
 // Number of bins in the histogram
 #define BINS 64
 //the size of the smallest interval chosen for the histogram
@@ -16,22 +16,35 @@
 // factor to divide the count by when printing the histogram
 #define SCALE 32
 
-void create_histogram(double values[], int counts[]) {
-  //print all values in the counts array
-  for (int i = 0; i < BINS; i++) {
-    printf("Count: %d\n", i);
-  }
+void create_histogram(const double values[], int counts[]) {
+    double bin_size = HISTOGRAM_SPAN / (double)BINS;
+    double lower_bound = -HISTOGRAM_SPAN / 2.0;
+    
+    for (int i = 0; i < RUNS; i++) {
+        if (values[i] >= lower_bound && values[i] < -lower_bound) {
+            int index = (int)((values[i] - lower_bound) / bin_size);
+            
+            // Ensure the index is within bounds
+            if (index < 0) index = 0;
+            if (index >= BINS) index = BINS - 1;
+            
+            counts[index]++;
+        }
+    }
+}
 
-  printf("Creating histogram...\n");
-  //iterate over the values array
-  for (int i = 0; i < RUNS; i++) {
-    //get the index of the bin
-    int bin = (int)(values[i] / HISTOGRAM_SPAN);
-    //increment the count of the bin
-    counts[bin]++;
-  }
+void print_histogram(const int counts[]) {
+    double bin_size = HISTOGRAM_SPAN / (double)BINS;
+    double lower_bound = -HISTOGRAM_SPAN / 2.0;
 
-
+    for (int i = 0; i < BINS; i++) {
+        printf("%7.4f ", lower_bound);
+        for (int j = 0; j < counts[i] / SCALE; j++) {
+            printf("X");
+        }
+        printf("\n");
+        lower_bound += bin_size;
+    }
 }
 
 double get_mean_squared_error(double values[], double mean) {
@@ -59,7 +72,7 @@ double get_mean_of_uniform_random_samples() {
     return sum / SAMPLES;
 }
 
-double populate_values_and_get_mean(double values[], int n) {
+double populate_values_and_get_mean(double values[]) {
     double sum = 0.0;
     
     for (int i = 0; i < RUNS; i++) {
@@ -71,29 +84,31 @@ double populate_values_and_get_mean(double values[], int n) {
 }
 
 int main() {
-  srand(time(NULL));
-  // Allocate memory for the values array using calloc
-  double *values = (double *)calloc(RUNS, sizeof(double));
-  
-  if (values == NULL) {
-      fprintf(stderr, "Memory allocation failed\n");
-      return 1;
-  }
-  
-  for(int runs = 0; runs < RUNS; runs++) {
+    srand(time(NULL));
+    
+    // Allocate memory for the values array using calloc
+    double *values = (double *)calloc(RUNS, sizeof(double));
+    int counts[BINS] = {0};  // Initialize all counts to 0
+    
+    if (values == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 1;
+    }
+    
     // Call populate_values_and_get_mean
-    double mean = populate_values_and_get_mean(values, RUNS);
+    double mean = populate_values_and_get_mean(values);
+    
     // Call get_mean_squared_error
     double mse = get_mean_squared_error(values, mean);
-
-    printf("Mean: %f\n", mse);
-    //create the counts array
-    int counts[BINS] = {0};
+    
     // Call create_histogram
     create_histogram(values, counts);
-  }
- // Free the allocated memory
-  free(values);
-
-  return 0;
+    
+    // Print results    
+    print_histogram(counts);
+    printf("Sample mean: %f\n Sample variance: %f\n", mean, mse);
+    // Free the allocated memory
+    free(values);
+    
+    return 0;
 }
