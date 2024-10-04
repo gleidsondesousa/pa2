@@ -35,15 +35,24 @@ void create_histogram(const double values[], int counts[]) {
 
 void print_histogram(const int counts[]) {
     double bin_size = HISTOGRAM_SPAN / (double)BINS;
-    double lower_bound = -HISTOGRAM_SPAN / 2.0;
-
+    double bin_start = -HISTOGRAM_SPAN / 2.0;  // Left end of the histogram span
+    
     for (int i = 0; i < BINS; i++) {
-        printf("%7.4f ", lower_bound);
-        for (int j = 0; j < counts[i] / SCALE; j++) {
+        // Calculate the label (center of the bin)
+        double label = bin_start + (bin_size / 2.0);
+        
+        // Print the label
+        printf("%7.4f ", label);
+        
+        // Print the scaled number of Xs
+        int scaled_count = counts[i] / SCALE;
+        for (int j = 0; j < scaled_count; j++) {
             printf("X");
         }
         printf("\n");
-        lower_bound += bin_size;
+        
+        // Move to the next bin
+        bin_start += bin_size;
     }
 }
 
