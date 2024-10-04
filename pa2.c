@@ -15,7 +15,7 @@
 // NOTE: Remember to change all i++ to ++i
 
 void create_histogram(double values[], int counts[]) {
-    printf("Creating histogram...\n");
+    
     memset(counts, 0, sizeof(int) * BINS);
     double bin_size = HISTOGRAM_SPAN / (double) BINS;
 
@@ -32,18 +32,25 @@ void create_histogram(double values[], int counts[]) {
     //}
 }
 
-void print_histogram(int counts[]) {
-    double bin_start = -(0.05 / 2.0);
-    double bin_size = HISTOGRAM_SPAN / (double) BINS;
-    int adjusted_count;
-
-    for (int i = 0; i < BINS; ++i) {
-        printf("%f ", bin_start);
-        adjusted_count = counts[i] / 32;
-        for (int j = 0; j < adjusted_count; ++j) {
+void print_histogram(const int counts[]) {
+    double bin_size = HISTOGRAM_SPAN / (double)BINS;
+    double bin_start = -HISTOGRAM_SPAN / 2.0;  // Left end of the histogram span
+    
+    for (int i = 0; i < BINS; i++) {
+        // Calculate the label (center of the bin)
+        double label = bin_start + (bin_size / 2.0);
+        
+        // Print the label
+        printf("%7.4f ", label);
+        
+        // Print the scaled number of Xs
+        int scaled_count = counts[i] / SCALE;
+        for (int j = 0; j < scaled_count; j++) {
             printf("X");
         }
         printf("\n");
+        
+        // Move to the next bin
         bin_start += bin_size;
     }
 }
@@ -84,9 +91,6 @@ double populate_values_and_get_mean(double values[], int n) {
         //printf("mean %d is: %f\n", i+1, values[i]);
         
         sum += values[i];
-        
-        //PROOF that we're executing unintended runs
-        //printf("A run has been completed.");
     }
     
     return sum / RUNS;
@@ -104,11 +108,6 @@ int main() {
         fprintf(stderr, "Memory allocation failed\n");
         return 1;
     }
-      
-    //TO REVIEW: I believe this for loop may be unnecessary. 
-    // The instructions are not very clear but it seems 
-    // that we may be executing RUNS^RUNS number of runs 
-    // rather than just RUNS number of runs.
     
     
     // Call populate_values_and_get_mean
@@ -122,6 +121,8 @@ int main() {
 
     create_histogram(values, counts); 
     print_histogram(counts);
+    printf("Sample mean: %f\t Sample variance: %f\n", mean, mse);
+    
     // Free the allocated memory
     free(values);
 
