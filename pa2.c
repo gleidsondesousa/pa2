@@ -9,9 +9,29 @@
 #define SAMPLES 10
 // Number of times to run the experiment
 #define RUNS 10
+// Number of bins in the histogram
+#define BINS 64
+//the size of the smallest interval chosen for the histogram
+#define HISTOGRAM_SPAN 0.05
+// factor to divide the count by when printing the histogram
+#define SCALE 32
 
 void create_histogram(double values[], int counts[]) {
+  //print all values in the counts array
+  for (int i = 0; i < BINS; i++) {
+    printf("Count: %d\n", i);
+  }
+
   printf("Creating histogram...\n");
+  //iterate over the values array
+  for (int i = 0; i < RUNS; i++) {
+    //get the index of the bin
+    int bin = (int)(values[i] / HISTOGRAM_SPAN);
+    //increment the count of the bin
+    counts[bin]++;
+  }
+
+
 }
 
 double get_mean_squared_error(double values[], double mean) {
@@ -60,31 +80,19 @@ int main() {
       return 1;
   }
   
-  double minimum = DBL_MAX;
-  double maximum = -DBL_MIN;
-
   for(int runs = 0; runs < RUNS; runs++) {
     // Call populate_values_and_get_mean
     double mean = populate_values_and_get_mean(values, RUNS);
     // Call get_mean_squared_error
     double mse = get_mean_squared_error(values, mean);
 
-    if (mse < 0) {
-      fprintf(stderr, "Mean squared error is negative\n");
-    }
-    
-    if (mse < minimum) {
-      minimum = mse;
-    }
-
-    if (mse > maximum) {
-      maximum = mse;
-    }
-  }  
-
-  printf("The minimum mean squared error is: %f\n", minimum);
-  printf("The maximum mean squared error is: %f\n", maximum);
-  // Free the allocated memory
+    printf("Mean: %f\n", mse);
+    //create the counts array
+    int counts[BINS] = {0};
+    // Call create_histogram
+    create_histogram(values, counts);
+  }
+ // Free the allocated memory
   free(values);
 
   return 0;
