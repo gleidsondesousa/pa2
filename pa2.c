@@ -1,17 +1,51 @@
 //Authors: Gleidson De Sousa - desousag@bc.edu, Andrew Bevington - bevingta@bc.edu
+
 #include <stdio.h>
 #include <stdlib.h>
-//used for DBL_MAX and DBL_MIN
-#include <float.h>
 #include <time.h>
+#include <string.h>
 
-// Number of random samples to take
-#define SAMPLES 10
-// Number of times to run the experiment
-#define RUNS 50
+//SYMBOLIC CONSTANTS
+#define SAMPLES 10000
+#define RUNS 50000
+#define BINS 64
+#define HISTOGRAM_SPAN 0.05
+#define SCALE 32
+
+// NOTE: Remember to change all i++ to ++i
 
 void create_histogram(double values[], int counts[]) {
     printf("Creating histogram...\n");
+    memset(counts, 0, sizeof(int) * BINS);
+    double bin_size = HISTOGRAM_SPAN / (double) BINS;
+
+    for (int j = 0; j < RUNS; ++j) {
+        int index = (int) ((values[j] + HISTOGRAM_SPAN / 2) / bin_size);
+        
+        if (index >= 0 && index < BINS) {
+            ++counts[index];
+        }
+    }
+    // TESTING counts array
+    //for (int i = 0; i < BINS; ++i) {
+    //    printf("counts[%d]: %d\n", i, counts[i]);
+    //}
+}
+
+void print_histogram(int counts[]) {
+    double bin_start = -(0.05 / 2.0);
+    double bin_size = HISTOGRAM_SPAN / (double) BINS;
+    int adjusted_count;
+
+    for (int i = 0; i < BINS; ++i) {
+        printf("%f ", bin_start);
+        adjusted_count = counts[i] / 32;
+        for (int j = 0; j < adjusted_count; ++j) {
+            printf("X");
+        }
+        printf("\n");
+        bin_start += bin_size;
+    }
 }
 
 double get_mean_squared_error(double values[], double mean) {
@@ -45,9 +79,12 @@ double populate_values_and_get_mean(double values[], int n) {
 
     for (int i = 0; i < RUNS; i++) {
         values[i] = get_mean_of_uniform_random_samples();
+        
         // TESTING: do the means tend toward 0?
-        printf("mean %d is: %f\n", i+1, values[i]);
+        //printf("mean %d is: %f\n", i+1, values[i]);
+        
         sum += values[i];
+        
         //PROOF that we're executing unintended runs
         //printf("A run has been completed.");
     }
@@ -57,17 +94,17 @@ double populate_values_and_get_mean(double values[], int n) {
 
 int main() {
     srand(time(NULL));
+    
     // Allocate memory for the values array using calloc
+    
     double *values = (double *)calloc(RUNS, sizeof(double));
-  
+    int counts[BINS];
+
     if (values == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         return 1;
     }
-  
-    double minimum = DBL_MAX;
-    double maximum = -DBL_MIN;
-    
+      
     //TO REVIEW: I believe this for loop may be unnecessary. 
     // The instructions are not very clear but it seems 
     // that we may be executing RUNS^RUNS number of runs 
@@ -80,8 +117,11 @@ int main() {
     // Call get_mean_squared_error
     double mse = get_mean_squared_error(values, mean);    
 
-    printf("mean squared error is: %f\n", mse);
+    // TEST
+    // printf("mean squared error is: %f\n", mse);
 
+    create_histogram(values, counts); 
+    print_histogram(counts);
     // Free the allocated memory
     free(values);
 
